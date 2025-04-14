@@ -1,22 +1,23 @@
 use reqwest::Client;
-use sui_sdk::SuiClientBuilder;
+use sui_sdk::{types::object, SuiClientBuilder};
 use serde_json::json;
 
 
 
-async fn start_test_client(){
+async fn start_test_client()-> Result<(), anyhow::Error>{
     // Sui testnet -- https://fullnode.testnet.sui.io:443
     let sui_testnet = SuiClientBuilder::default().build_testnet().await?;
     println!("Sui testnet version: {}", sui_testnet.api_version());
     let test_apis = sui_testnet.available_rpc_methods();
     print!("Testnet APIs: {:?}", test_apis);
-
+    Ok(())
 }
-async fn start_dev_client(){
+async fn start_dev_client()-> Result<(), anyhow::Error>{
      // Sui devnet -- https://fullnode.devnet.sui.io:443
      let sui_devnet = SuiClientBuilder::default().build_devnet().await?;
      println!("Sui devnet version: {}", sui_devnet.api_version());
  
+    Ok(())
 }
 
 #[tokio::main]
@@ -32,44 +33,32 @@ async fn main() -> Result<(), anyhow::Error> {
     
     // 创建一个HTTP客户端
     let client = Client::new();
-    // 构造请求体
-    let _request_body = json!({
-        "jsonrpc": "2.0",
-  "id": 1,
-  "method": "sui_getObject",
-  "params": [
-    "0x47ca2248bee2de9f44ea5c324f409763d29f56e5b08d5e849d03a2c101454717",
-    {
-      "showType": true,
-      "showOwner": true,
-      "showPreviousTransaction": true,
-      "showDisplay": false,
-      "showContent": true,
-      "showBcs": false,
-      "showStorageRebate": true
-    }
-  ]
-    });
+    
 
+
+    // 定义一个变量来存储对象ID
+    let object_id = "0x47ca2248bee2de9f44ea5c324f409763d29f56e5b08d5e849d03a2c101454717";
+    
     // 发送POST请求
-    let response = client.post("https://fullnode.mainnet.sui.io:443"). 
-    header("Content-Type", "application/json")
-        .body(r#"{
-         "jsonrpc": "2.0",
-  "id": 1,
-  "method": "sui_getObject",
-  "params": [
-    "0x47ca2248bee2de9f44ea5c324f409763d29f56e5b08d5e849d03a2c101454717",
-    {
-      "showType": true,
-      "showOwner": true,
-      "showPreviousTransaction": true,
-      "showDisplay": false,
-      "showContent": true,
-      "showBcs": false,
-      "showStorageRebate": true
-    }]
-            }"#)
+    let response = client.post("https://fullnode.mainnet.sui.io:443")
+        .header("Content-Type", "application/json")
+        .body(format!(r#"{{
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "sui_getObject",
+            "params": [
+                "{}",
+                {{
+                    "showType": true,
+                    "showOwner": true,
+                    "showPreviousTransaction": true,
+                    "showDisplay": false,
+                    "showContent": true,
+                    "showBcs": false,
+                    "showStorageRebate": true
+                }}
+            ]
+        }}"#, object_id))
         .send()
         .await?;
 
