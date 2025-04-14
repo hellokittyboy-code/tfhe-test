@@ -67,5 +67,26 @@ async fn main() -> Result<(), anyhow::Error> {
     // 打印响应内容
     let response_text = response.text().await?;
     println!("Response Body: {}", response_text);
+
+    // 解析JSON响应
+    let json_response: serde_json::Value = serde_json::from_str(&response_text)?;
+    if let Some(fields) = json_response["result"]["data"]["content"]["fields"].as_object() {
+        println!("Fields: {:?}", fields);
+        // 提取具体字段
+        if let Some(creator) = fields.get("creator").and_then(|v| v.as_str()) {
+            println!("Creator: {}", creator);
+        }
+        if let Some(reserve_x) = fields.get("reserve_x").and_then(|v| v.as_str()) {
+            println!("Reserve X: {}", reserve_x);
+        }
+        if let Some(reserve_y) = fields.get("reserve_y").and_then(|v| v.as_str()) {
+            println!("Reserve Y: {}", reserve_y);
+        }
+        // 可以根据需要提取更多字段
+    }
+
     Ok(())
 }
+
+
+
