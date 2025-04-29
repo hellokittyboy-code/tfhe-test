@@ -5,11 +5,20 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::Relaxed;
 use chrono::Local;
 use log::info;
-use tfhe::{generate_keys, set_server_key, ConfigBuilder, FheUint32, FheUint8, ClientKey, CompressedServerKey};
-
-use tfhe::prelude::*;
 
 fn main() -> Result<(), std::io::Error> {
+    Ok(())
+}
+
+#[cfg(test)]
+fn main_test() {
+    info!("Test function executed");
+    test_process();
+}
+
+use tfhe::prelude::*;
+use tfhe::{generate_keys, set_server_key, ConfigBuilder, FheUint32, FheUint8, ClientKey, CompressedServerKey};
+fn test_process() -> Result<(), Box<dyn std::error::Error>> {
     let mut now = Local::now();
     info!("[{}] start process init...", now.format("%Y-%m-%d %H:%M:%S%.3f"));
     // Basic configuration to use homomorphic integers
