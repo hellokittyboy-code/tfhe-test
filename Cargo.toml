@@ -1,5 +1,5 @@
 [package]
-name = "sui-mev-private-sui-service"
+name = "tfhe-test"
 version = "0.1.0"
 edition = "2021"
 

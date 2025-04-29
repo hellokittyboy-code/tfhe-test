@@ -826,19 +826,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-mev-private-sui-service"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "log",
- "no-comment",
- "simplelog",
- "tfhe",
- "walkdir",
-]
-
-[[package]]
 name = "syn"
 version = "2.0.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -924,6 +911,19 @@ dependencies = [
  "aligned-vec",
  "bytemuck",
  "pulp",
+]
+
+[[package]]
+name = "tfhe-test"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "log",
+ "no-comment",
+ "simplelog",
+ "tfhe",
+ "walkdir",
 ]
 
 [[package]]
