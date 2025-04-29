@@ -5,13 +5,8 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::Relaxed;
 use chrono::Local;
 use log::info;
-use tfhe::ConfigBuilder;
-use tfhe::generate_keys;
-use tfhe::ClientKey;
-use tfhe::CompressedServerKey;
-use tfhe::FheUint32;
-use tfhe::FheUint8;
-use tfhe::set_server_key;
+use tfhe::{generate_keys, set_server_key, ConfigBuilder, FheUint32, FheUint8, ClientKey, CompressedServerKey};
+
 use tfhe::prelude::*;
 
 fn main() -> Result<(), std::io::Error> {
