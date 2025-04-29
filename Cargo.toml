@@ -9,5 +9,5 @@ log = "0.4"
 simplelog = "0.12"
 walkdir = "2.5.0"
 no-comment = "0.0.3"
-tfhe = { git = "https://github.com/hellokittyboy-code/tfhe-rs.git", features = ["boolean", "shortint", "integer", "gpu"]}
+tfhe = { git = "https://github.com/hellokittyboy-code/tfhe-rs.git", features = ["boolean", "shortint", "integer"]}
 chrono = "0.4"
