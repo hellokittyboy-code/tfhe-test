@@ -4,6 +4,14 @@ use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode};
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::Relaxed;
 use chrono::Local;
+use log::info;
+use tfhe::ConfigBuilder;
+use tfhe::ClientKey;
+use tfhe::CompressedServerKey;
+use tfhe::FheUint32;
+use tfhe::FheUint8;
+use tfhe::set_server_key;
+
 fn main() -> Result<(), std::io::Error> {
     let mut now = Local::now();
     info!("[{}] start process init...", now.format("%Y-%m-%d %H:%M:%S%.3f"));
@@ -12,11 +20,7 @@ fn main() -> Result<(), std::io::Error> {
 
     let config = ConfigBuilder::default().build();
 
-    let client_key= ClientKey::generate(config);
-    let compressed_server_key = CompressedServerKey::new(&client_key);
-
-    let gpu_key = compressed_server_key.decompress_to_gpu();
-
+    let (client_key, server_keys) = generate_keys(config);
 
     // Key generation
    // let (client_key, server_keys) = generate_keys(config);
@@ -34,7 +38,7 @@ fn main() -> Result<(), std::io::Error> {
     let encrypted_c = FheUint8::try_encrypt(clear_c, &client_key)?;
 
     // On the server side:
-    set_server_key(gpu_key);
+    set_server_key(server_keys);
 
     now = Local::now();
     info!("[{}] set process server key...", now.format("%Y-%m-%d %H:%M:%S%.3f"));
