@@ -6,6 +6,7 @@ use std::sync::atomic::Ordering::Relaxed;
 use chrono::Local;
 use log::info;
 use tfhe::ConfigBuilder;
+use tfhe::generate_keys;
 use tfhe::ClientKey;
 use tfhe::CompressedServerKey;
 use tfhe::FheUint32;
