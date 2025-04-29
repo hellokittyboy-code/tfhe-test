@@ -12,6 +12,7 @@ use tfhe::CompressedServerKey;
 use tfhe::FheUint32;
 use tfhe::FheUint8;
 use tfhe::set_server_key;
+use tfhe::prelude::*;
 
 fn main() -> Result<(), std::io::Error> {
     let mut now = Local::now();
