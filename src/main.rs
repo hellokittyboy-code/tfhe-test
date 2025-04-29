@@ -7,6 +7,7 @@ use chrono::Local;
 use log::info;
 
 fn main() -> Result<(), std::io::Error> {
+    test_process();
     Ok(())
 }
 
