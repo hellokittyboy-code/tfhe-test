@@ -1,92 +1,78 @@
-use reqwest::Client;
-use sui_sdk::{types::object, SuiClientBuilder};
-use serde_json::json;
+use clap::{Arg, Command};
+use log::LevelFilter;
+use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode};
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::Relaxed;
+use chrono::Local;
+fn main() -> Result<(), std::io::Error> {
+    let mut now = Local::now();
+    info!("[{}] start process init...", now.format("%Y-%m-%d %H:%M:%S%.3f"));
+    // Basic configuration to use homomorphic integers
+    //let config = ConfigBuilder::default().build();
+
+    let config = ConfigBuilder::default().build();
+
+    let client_key= ClientKey::generate(config);
+    let compressed_server_key = CompressedServerKey::new(&client_key);
+
+    let gpu_key = compressed_server_key.decompress_to_gpu();
 
 
+    // Key generation
+   // let (client_key, server_keys) = generate_keys(config);
 
-async fn start_test_client()-> Result<(), anyhow::Error>{
-    // Sui testnet -- https://fullnode.testnet.sui.io:443
-    let sui_testnet = SuiClientBuilder::default().build_testnet().await?;
-    println!("Sui testnet version: {}", sui_testnet.api_version());
-    let test_apis = sui_testnet.available_rpc_methods();
-    print!("Testnet APIs: {:?}", test_apis);
+    let clear_a = 1344u32;
+    let clear_b = 5u32;
+    let clear_c = 7u8;
+
+    // Encrypting the input data using the (private) client_key
+    // FheUint32: Encrypted equivalent to u32
+    let mut encrypted_a = FheUint32::try_encrypt(clear_a, &client_key)?;
+    let encrypted_b = FheUint32::try_encrypt(clear_b, &client_key)?;
+
+    // FheUint8: Encrypted equivalent to u8
+    let encrypted_c = FheUint8::try_encrypt(clear_c, &client_key)?;
+
+    // On the server side:
+    set_server_key(gpu_key);
+
+    now = Local::now();
+    info!("[{}] set process server key...", now.format("%Y-%m-%d %H:%M:%S%.3f"));
+
+
+    // Clear equivalent computations: 1344 * 5 = 6720
+    let encrypted_res_mul = &encrypted_a * &encrypted_b;
+    let now = Local::now();
+    info!("[{}] set process sClear equivalent computations: 1344 * 5 = 6720...", now.format("%Y-%m-%d %H:%M:%S%.3f"));
+
+    // Clear equivalent computations: 6720 >> 5 = 210
+    encrypted_a = &encrypted_res_mul >> &encrypted_b;
+    let now = Local::now();
+    info!("[{}] set process Clear equivalent computations: 6720 >> 5 = 210", now.format("%Y-%m-%d %H:%M:%S%.3f"));
+
+    // Clear equivalent computations: let casted_a = a as u8;
+    let casted_a: FheUint8 = encrypted_a.cast_into();
+    let now = Local::now();
+    info!("[{}] set process Clear equivalent computations: let casted_a = a as u8;", now.format("%Y-%m-%d %H:%M:%S%.3f"));
+
+    // Clear equivalent computations: min(210, 7) = 7
+    let encrypted_res_min = &casted_a.min(&encrypted_c);
+    let now = Local::now();
+    info!("[{}] Clear equivalent computations: min(210, 7) = 7", now.format("%Y-%m-%d %H:%M:%S%.3f"));
+
+
+    // Operation between clear and encrypted data:
+    // Clear equivalent computations: 7 & 1 = 1
+    let encrypted_res = encrypted_res_min & 1_u8;
+
+    let now = Local::now();
+    info!("[{}] encrpted res...", now.format("%Y-%m-%d %H:%M:%S%.3f"));
+
+
+    // Decrypting on the client side:
+    let clear_res: u8 = encrypted_res.decrypt(&client_key);
+    assert_eq!(clear_res, 1_u8);
+    let now = Local::now();
+    info!("[{}] test process executed successfully", now.format("%Y-%m-%d %H:%M:%S%.3f"));
     Ok(())
 }
-async fn start_dev_client()-> Result<(), anyhow::Error>{
-     // Sui devnet -- https://fullnode.devnet.sui.io:443
-     let sui_devnet = SuiClientBuilder::default().build_devnet().await?;
-     println!("Sui devnet version: {}", sui_devnet.api_version());
- 
-    Ok(())
-}
-
-#[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
-    
-
-    
-    // Sui mainnet -- https://fullnode.mainnet.sui.io:443
-    let sui_mainnet = SuiClientBuilder::default().build_mainnet().await?;
-    println!("Sui mainnet version: {}", sui_mainnet.api_version());
-    let main_apis = sui_mainnet.available_rpc_methods();
-    print!("MainNet APIs: {:?}", main_apis);
-    
-    // 创建一个HTTP客户端
-    let client = Client::new();
-    
-
-
-    // 定义一个变量来存储对象ID
-    let object_id = "0x47ca2248bee2de9f44ea5c324f409763d29f56e5b08d5e849d03a2c101454717";
-    
-    // 发送POST请求
-    let response = client.post("https://fullnode.mainnet.sui.io:443")
-        .header("Content-Type", "application/json")
-        .body(format!(r#"{{
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "sui_getObject",
-            "params": [
-                "{}",
-                {{
-                    "showType": true,
-                    "showOwner": true,
-                    "showPreviousTransaction": true,
-                    "showDisplay": false,
-                    "showContent": true,
-                    "showBcs": false,
-                    "showStorageRebate": true
-                }}
-            ]
-        }}"#, object_id))
-        .send()
-        .await?;
-
-    // 打印响应状态
-    println!("Response Status: {}", response.status());
-    // 打印响应内容
-    let response_text = response.text().await?;
-    println!("Response Body: {}", response_text);
-
-    // 解析JSON响应
-    let json_response: serde_json::Value = serde_json::from_str(&response_text)?;
-    if let Some(fields) = json_response["result"]["data"]["content"]["fields"].as_object() {
-        println!("Fields: {:?}", fields);
-        // 提取具体字段
-        if let Some(creator) = fields.get("creator").and_then(|v| v.as_str()) {
-            println!("Creator: {}", creator);
-        }
-        if let Some(reserve_x) = fields.get("reserve_x").and_then(|v| v.as_str()) {
-            println!("Reserve X: {}", reserve_x);
-        }
-        if let Some(reserve_y) = fields.get("reserve_y").and_then(|v| v.as_str()) {
-            println!("Reserve Y: {}", reserve_y);
-        }
-        // 可以根据需要提取更多字段
-    }
-
-    Ok(())
-}
-
-
-
